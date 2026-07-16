@@ -1,27 +1,57 @@
+"""
+API de Cotação de Moedas
+
+Projeto desenvolvido para demonstrar o consumo de uma API externa
+utilizando FastAPI e Requests.
+
+Recursos:
+- Cotação atual de Dólar (USD)
+- Cotação atual de Euro (EUR)
+- Cotação atual de Bitcoin (BTC)
+
+Autor: Lucival Moura
+"""
+
 from fastapi import FastAPI
+import requests
 
-app = FastAPI()
+app = FastAPI(
+    title="API de Cotação de Moedas",
+    description="Consulta cotações em tempo real utilizando a AwesomeAPI.",
+    version="1.0.0"
+)
 
-vendas = {
-    1: {"item": "lata", "preco_unitario": 4, "quantidade": 5},
-    2: {"item": "garrafa 2L", "preco_unitario": 15, "quantidade": 5},
-    3: {"item": "garrafa 750ml", "preco_unitario": 10, "quantidade": 5},
-    4: {"item": "lata mini", "preco_unitario": 2, "quantidade": 5},
-}
 
 @app.get("/")
 def home():
-    return {"Vendas": len(vendas)}
+    return {
+        "mensagem": "Bem-vindo à API de Cotação de Moedas",
+        "rotas": [
+            "/cotacoes"
+        ]
+    }
 
-@app.get("/vendas/{id_venda}")
-def pegar_venda(id_venda: int):
-    if id_venda in vendas:
-        return vendas[id_venda]
-    else:
-        return {"Erro": "ID Venda inexistente"}
+
+@app.get("/cotacoes")
+def obter_cotacoes():
+    url = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+
+        return {
+            "mensagem": "Cotações atuais",
+            "cotacoes": response.json()
+        }
+
+    except requests.RequestException:
+        return {
+            "erro": "Não foi possível consultar a AwesomeAPI."
+        }
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
